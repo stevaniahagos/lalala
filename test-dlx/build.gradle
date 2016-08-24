@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'jacoco'
 
 sourceCompatibility = 1.5
 version = '1.0'
@@ -25,6 +26,15 @@ dependencies {
 
 test {
     systemProperties 'property': 'value'
+}
+
+jacoco {
+    toolVersion = "0.7.4+"
+    reportsDir = file("$buildDir/jacocoReportsDir")
+}
+
+jacocoTestReport{
+	dependsOn test
 }
 
 uploadArchives {
