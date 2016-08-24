@@ -3,13 +3,14 @@ package com.datalex.controller;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.text.ParseException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bson.Document;
 
 import com.datalex.model.Person;
-import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -28,7 +29,7 @@ public class FileReaderWriter {
 	private static final String NEW_LINE_SEPARATOR = "\n";
 	private static final String COMMA_DELIMITER = ",";
 	private static final String[] fields = {"firstName", "lastName", "streetAddress", "city", 
-			"birthDate", "age", "contacts"};
+			"birthDate", "contacts"};
 	
 	MongoClient mongo = new MongoClient("localhost", 27017);
 	MongoDatabase database = mongo.getDatabase("people");
@@ -75,17 +76,22 @@ public class FileReaderWriter {
 	/**
 	 * Converts the data from .csv file into a Person object and saves it into the database
 	 * @param line
+	 * @throws ParseException 
 	 */
-	private void writeToDb(String line){
-		Person person = new Person();
+	private void writeToDb(String line) throws ParseException{
 		String[] contents = line.split(COMMA_DELIMITER);
+		Person person = new Person();
+		Document toAdd = new Document();
 		
 		for(String field : fields){
 			for(String something : contents){
-				if(ArrayUtils.indexOf(fields, field) == ArrayUtils.indexOf(contents, something)){
-					log.info(field + ": " + something);
-				}
+				if(ArrayUtils.indexOf(fields, field) == ArrayUtils.indexOf(contents, something))
+					toAdd.put(field, something);
 			}
 		}
+		toAdd.put("age", String.valueOf(person.computeAge(String.valueOf(toAdd.get("birthDate")))));			
+		//age added into database record separately due to conflicts when working with static data from file
+		
+		collection.insertOne(toAdd);
 	}
 }
