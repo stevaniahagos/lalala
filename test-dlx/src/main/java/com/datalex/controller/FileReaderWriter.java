@@ -22,6 +22,10 @@ import com.mongodb.client.MongoDatabase;
  *   Reads specified file and writes into database
  *   Writes into a new file if/when changes have been made to the existing data
  * */
+/**
+ * @author sahagos
+ *
+ */
 public class FileReaderWriter {
 	
 	private static final Log log = LogFactory.getLog(FileReaderWriter.class);
@@ -33,16 +37,20 @@ public class FileReaderWriter {
 	
 	MongoClient mongo = new MongoClient("localhost", 27017);
 	MongoDatabase database = mongo.getDatabase("people");
-	MongoCollection collection = database.getCollection("allThePeople");
-	FindIterable iterable = collection.find();
+	MongoCollection<Document> collection = database.getCollection("allThePeople");
+	FindIterable<Document> iterable = collection.find();
 			
 	public static void main(String[] args) throws Exception{
-		Person me = new Person();
 		FileReaderWriter frw = new FileReaderWriter();
-		log.info(frw.readFile("com/datalex/initial/data/initPersons.csv"));
+		String content = frw.readFile("com/datalex/initial/data/initPersons.csv");
 	}
 	
-	private String readFile(String fileName){
+	
+	/**
+	 * Reads the data found in csv file and writes into database
+	 * @param fileName
+	 */
+	private String readFile(String fileName){ 
 		ClassLoader classLoader = getClass().getClassLoader();
 		File file = new File(classLoader.getResource(fileName).getFile());
 		String content = "";
@@ -89,8 +97,8 @@ public class FileReaderWriter {
 					toAdd.put(field, something);
 			}
 		}
-		toAdd.put("age", String.valueOf(person.computeAge(String.valueOf(toAdd.get("birthDate")))));			
 		//age added into database record separately due to conflicts when working with static data from file
+		toAdd.put("age", String.valueOf(person.computeAge(String.valueOf(toAdd.get("birthDate")))));			
 		
 		collection.insertOne(toAdd);
 	}
