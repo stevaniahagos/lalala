@@ -3,6 +3,7 @@ package com.datalex.controller;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -22,10 +23,6 @@ import com.mongodb.client.MongoDatabase;
  *   Reads specified file and writes into database
  *   Writes into a new file if/when changes have been made to the existing data
  * */
-/**
- * @author sahagos
- *
- */
 public class FileReaderWriter {
 	
 	private static final Log log = LogFactory.getLog(FileReaderWriter.class);
@@ -35,49 +32,66 @@ public class FileReaderWriter {
 	private static final String[] fields = {"firstName", "lastName", "streetAddress", "city", 
 			"birthDate", "contacts"};
 	
-	MongoClient mongo = new MongoClient("localhost", 27017);
-	MongoDatabase database = mongo.getDatabase("people");
-	MongoCollection<Document> collection = database.getCollection("allThePeople");
-	FindIterable<Document> iterable = collection.find();
+	static MongoClient mongo = new MongoClient("localhost", 27017);
+	static MongoDatabase database = mongo.getDatabase("people");
+	static MongoCollection<Document> collection = database.getCollection("allThePeople");
+	static FindIterable<Document> iterable = collection.find();
+	
+	static BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 			
 	public static void main(String[] args) throws Exception{
 		FileReaderWriter frw = new FileReaderWriter();
+		Operations ops = new Operations();
 		String content = frw.readFile("com/datalex/initial/data/initPersons.csv");
+		log.info(content);
+		
+		ops.displayOptions();
 	}
 	
 	
 	/**
-	 * Reads the data found in csv file and writes into database
+	 * Reads the data found in initial csv file and writes into database
+	 * if collection does not have any existing records as of start time
 	 * @param fileName
+	 * @return String of file contents
 	 */
 	private String readFile(String fileName){ 
-		ClassLoader classLoader = getClass().getClassLoader();
-		File file = new File(classLoader.getResource(fileName).getFile());
-		String content = "";
-		try{
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			StringBuffer sb = new StringBuffer();
-			
-			/*
-			 * skips the first line of the csv file so that the header values will not be added to the database
-			 * suppressed unused warning because the header String's only purpose is to skip over the file's first line
-			 */
-			@SuppressWarnings("unused")
-			String header = br.readLine();
-			
-			//iterates through the rest of the file to add to the database
-			String line = br.readLine();
-			while(null != line){
-				sb.append(line);
-				writeToDb(line);
-				line = br.readLine();
+		
+		log.info(collection.count());
+		
+		if(collection.count() == 0){
+			ClassLoader classLoader = getClass().getClassLoader();
+			File file = new File(classLoader.getResource(fileName).getFile());
+			String content = "";
+			try{
+				BufferedReader br = new BufferedReader(new FileReader(file));
+				StringBuffer sb = new StringBuffer();
+				
+				/*
+				 * skips the first line of the csv file so that the header values will not be added to the database
+				 * suppressed unused warning because the header String's only purpose is to skip over the file's first line
+				 */
+				@SuppressWarnings("unused")
+				String header = br.readLine();
+				
+				//iterates through the rest of the file to add to the database
+				String line = br.readLine();
+				while(null != line){
+					sb.append(line);
+					writeToDb(line);
+					line = br.readLine();
+				}
+				content = sb.toString();
+				log.info(content);
+				
+				br.close();
+			} catch(Exception e){
+				e.printStackTrace();
 			}
-			content = sb.toString();
-			log.info(content);
-		} catch(Exception e){
-			e.printStackTrace();
+			return content;
 		}
-		return content;
+		
+		return "No init. Collection contains documents";
 	}
 	
 	
