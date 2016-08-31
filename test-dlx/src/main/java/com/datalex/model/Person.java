@@ -5,11 +5,12 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
+
+import org.bson.types.ObjectId;
 
 public class Person
 {
-
+	private ObjectId _id;
     private String firstName;
     private String lastName;
     private String streetAddress;
@@ -18,7 +19,20 @@ public class Person
     private int age;
     private HashMap<String, String> contactInfos;
 
-    public String getFirstName()
+
+	public ObjectId getId() {
+		return _id;
+	}
+
+	public void setId(ObjectId _id) {
+		if(_id == null){
+			this._id = new ObjectId();
+		}
+		
+		this._id = _id;
+	}
+
+	public String getFirstName()
     {
         return firstName;
     }

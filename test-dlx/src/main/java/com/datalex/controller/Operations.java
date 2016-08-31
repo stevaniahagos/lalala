@@ -41,7 +41,7 @@ public class Operations {
 	private static final String SEMI_COLON_DELIMITER = "; ";
 	private static final String[] fields = {"firstName", "lastName", "streetAddress", "city", 
 			"birthDate", "contacts"};
-	private static final String[] fileFields = {"ID", "firstName", "lastName", "streetAddress", "city", 
+	private static final String[] fileFields = {"id", "firstName", "lastName", "streetAddress", "city", 
 			"birthDate", "age", "contacts"};
 	
 	public void displayOptions() throws Exception{
@@ -92,8 +92,37 @@ public class Operations {
 	    String updateId = reader.readLine();
 	    Document update = collection.find(Filters.eq("_id", new ObjectId(updateId))).first();
 	    System.out.println("For your reference, here is the document's existing data: \n" + update.toJson());
-		
+	    System.out.println("Please choose what field to update: \n1 - first name \n2 - last name \n3 - street address"
+	    		+ "\n4 - city \n5 - birthday \n6 - contact information");
+	    String updateField = reader.readLine();
+	    System.out.println("Enter your new value: ");
+	    String updatedValue = reader.readLine();
+	    Person person = mapper.readValue(update.toJson(), Person.class);
+	    
+	    Document updatedPerson = editOptions(person, updateField, updatedValue);
+	    collection.findOneAndReplace(Filters.eq("_id", new ObjectId(updateId)), updatedPerson);
+	    
 		displayOptions();
+	}
+	
+	public Document editOptions(Person person, String updateField, String updatedValue) throws Exception{
+		try{
+			switch(Integer.parseInt(updateField)){
+		    case 1: person.setFirstName(updatedValue); break;
+		    case 2: person.setLastName(updatedValue); break;
+		    case 3: person.setStreetAddress(updatedValue); break;
+		    case 4: person.setCity(updatedValue); break;
+		    case 5: person.setBirthDate(updatedValue); person.setAge(person.getBirthDate()); break;
+		    case 6: person.setContactInfos(updatedValue); break;
+		    default: System.out.println("Invalid entry. please enter again");
+		    }
+		} catch(NumberFormatException e){
+			System.err.println("Invalid entry. Please enter again");
+			editOptions(person, updateField, updatedValue);
+		}
+		
+		Document updatedPerson  = Document.parse(mapper.writeValueAsString(person));
+		return updatedPerson;
 	}
 	
 	public void deletePerson() throws Exception{
