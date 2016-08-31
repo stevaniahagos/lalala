@@ -137,32 +137,67 @@ public class Person
      * Computes person's age based on entered string
      * @param String birthDate - format mm/dd/yyyy
      * @return person's age in years
-     * @throws ParseException
      */
-    public int computeAge(String birthDate) throws ParseException
+    public int computeAge(String birthDate)
     {
         Calendar bday = new GregorianCalendar(Locale.GERMAN);
-
-        String[] nos = birthDate.split("/");
-
-        // subtracting 1 from input date because java.util.Calendar.MONTH is zero-based
-        bday.set(Calendar.MONTH, Integer.parseInt(nos[0]) - 1);
-        bday.set(Calendar.DATE, Integer.parseInt(nos[1]));
-        bday.set(Calendar.YEAR, Integer.parseInt(nos[2]));
-
-        Calendar now = new GregorianCalendar(Locale.GERMAN);
         int personAge = 0;
 
-        if (bday.get(Calendar.DAY_OF_YEAR) >= now.get(Calendar.DAY_OF_YEAR))
-        {
-            personAge = now.get(Calendar.YEAR) - bday.get(Calendar.YEAR) - 1;
+        String[] nos = birthDate.split("/");
+        
+        if(isBirthdateValid(birthDate)){
+        	// subtracting 1 from input date because java.util.Calendar.MONTH is zero-based
+        	bday.set(Calendar.MONTH, Integer.parseInt(nos[0]) - 1);
+        	bday.set(Calendar.DATE, Integer.parseInt(nos[1]));
+        	bday.set(Calendar.YEAR, Integer.parseInt(nos[2]));
+        	
+        	Calendar now = new GregorianCalendar(Locale.GERMAN);
+        	
+        	if (bday.get(Calendar.DAY_OF_YEAR) >= now.get(Calendar.DAY_OF_YEAR))
+        	{
+        		personAge = now.get(Calendar.YEAR) - bday.get(Calendar.YEAR) - 1;
+        	}
+        	else if (bday.get(Calendar.DAY_OF_YEAR) < now.get(Calendar.DAY_OF_YEAR))
+        	{
+        		personAge = now.get(Calendar.YEAR) - bday.get(Calendar.YEAR);
+        	}        	
+        } else {
+        	System.out.println("Invalid birth date");
         }
-        else if (bday.get(Calendar.DAY_OF_YEAR) < now.get(Calendar.DAY_OF_YEAR))
-        {
-            personAge = now.get(Calendar.YEAR) - bday.get(Calendar.YEAR);
-        }
-
         return personAge;
+    }
+    
+    /**
+     * validates entered person birth date if it is a valid entry in the calendar
+     * @param birthDate
+     * @return
+     */
+    public boolean isBirthdateValid(String birthDate){
+    	String[] nos = birthDate.split("/");
+    	int month = Integer.parseInt(nos[0]);
+    	int date = Integer.parseInt(nos[1]);
+    	int year = Integer.parseInt(nos[2]);
+    	
+    	boolean valid = true;
+    	
+    	if(month > 12 || date < 0) valid = false;
+    	
+    	switch(month){
+    	//cases for April, June, September, and November (which hold 30 days)
+    	case 4:
+    	case 6: 
+    	case 9:
+    	case 11:
+    		if(date > 30) valid = false;
+    	case 2: //special case for February
+    		if(year % 4 == 0 && date > 29) valid = false;
+    		else if (year % 4 != 0 && date > 28) valid = false;
+    	//default case for remaining months that hold 31 days
+    	default:
+    		if(date > 31) valid = false;
+    	}
+    	
+    	return valid;
     }
 
 }
