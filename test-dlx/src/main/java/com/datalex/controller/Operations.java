@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.bson.Document;
@@ -97,6 +98,17 @@ public class Operations {
 	    String updateField = reader.readLine();
 	    System.out.println("Enter your new value: ");
 	    String updatedValue = reader.readLine();
+	    
+	    update.remove("_id");
+	    update.remove("age");
+	    Document contactDocument = (Document) update.get("contactInfos");
+	    List<Entry<String, Object>> contactEntries = new ArrayList<Entry<String, Object>>(contactDocument.entrySet());
+	    StringBuffer contactBuffer = new StringBuffer();
+	    for(Entry<String, Object> entry : contactEntries){
+	    	contactBuffer.append(entry.getKey().concat(": ").concat(String.valueOf(entry.getValue())));
+	    	contactBuffer.append(contactEntries.indexOf(entry) == contactEntries.size() -1 ? "" : "; ");
+	    }
+	    update.put("contactInfos", contactBuffer.toString());
 	    Person person = mapper.readValue(update.toJson(), Person.class);
 	    
 	    Document updatedPerson = editOptions(person, updateField, updatedValue);
@@ -112,10 +124,11 @@ public class Operations {
 		    case 2: person.setLastName(updatedValue); break;
 		    case 3: person.setStreetAddress(updatedValue); break;
 		    case 4: person.setCity(updatedValue); break;
-		    case 5: person.setBirthDate(updatedValue); person.setAge(person.getBirthDate()); break;
+		    case 5: person.setBirthDate(updatedValue); break;
 		    case 6: person.setContactInfos(updatedValue); break;
 		    default: System.out.println("Invalid entry. please enter again");
 		    }
+			person.setAge(person.getBirthDate());
 		} catch(NumberFormatException e){
 			System.err.println("Invalid entry. Please enter again");
 			editOptions(person, updateField, updatedValue);
